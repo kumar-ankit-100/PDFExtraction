@@ -15,18 +15,18 @@ from pathlib import Path
 import time
 import uuid
 
-from app.config import settings
-from app.services.pdf_extractor import PDFExtractor
-from app.services.gemini_extractor import GeminiExtractor
-from app.services.excel_generator import ExcelGenerator
+from app.settings import settings
+from app.services.document_parser import PDFExtractor
+from app.services.ai_processor import GeminiExtractor
+from app.services.spreadsheet_creator import ExcelGenerator
 from app.database import init_db, get_db
-from app.database.crud import (
+from app.database.operations import (
     UploadedFileService,
     ExtractionResultService,
     ExtractionLogService,
     JobStatusService
 )
-from app.database.models import JobStatusEnum, LogLevelEnum
+from app.database.schemas import JobStatusEnum, LogLevelEnum
 
 # Configure logging
 logging.basicConfig(

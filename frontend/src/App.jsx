@@ -2,14 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { SignedIn, SignedOut } from '@clerk/clerk-react';
 import toast, { Toaster } from 'react-hot-toast';
-import Sidebar from './components/Sidebar';
-import Footer from './components/Footer';
-import HomePage from './components/HomePage';
-import FileUpload from './components/FileUpload';
-import ProcessingPage from './components/ProcessingPage';
-import ResultsPage from './components/ResultsPage';
-import HistoryPage from './components/HistoryPage';
-import CompareXLSX from './components/CompareXLSX';
+import NavigationPanel from './components/NavigationPanel';
+import BottomBar from './components/BottomBar';
+import LandingView from './components/LandingView';
+import DocumentUploader from './components/DocumentUploader';
+import ExtractionProcessor from './components/ExtractionProcessor';
+import OutputDisplay from './components/OutputDisplay';
+import RecordsArchive from './components/RecordsArchive';
+import DataComparison from './components/DataComparison';
 import { uploadFiles } from './services/api';
 import './App.css';
 
@@ -156,15 +156,15 @@ function App() {
         }}
       />
       
-      {/* Show HomePage when signed out */}
+      {/* Show LandingView when signed out */}
       <SignedOut>
-        <HomePage />
+        <LandingView />
       </SignedOut>
 
-      {/* Show main content with sidebar when signed in */}
+      {/* Show main content with navigation panel when signed in */}
       <SignedIn>
         <div className="flex h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900 transition-colors duration-300 overflow-hidden">
-          <Sidebar onWidthChange={setSidebarWidth} />
+          <NavigationPanel onWidthChange={setSidebarWidth} />
           
           <main 
             className="flex-1 overflow-auto transition-all duration-300 ease-in-out"
@@ -197,7 +197,7 @@ function App() {
 
                 {/* Upload Card */}
                 <div className="bg-white dark:bg-slate-800 backdrop-blur-sm border-2 border-slate-200 dark:border-slate-700 rounded-3xl p-10 shadow-2xl shadow-slate-300/50 dark:shadow-slate-950/50 animate-scale-in">
-                  <FileUpload
+                  <DocumentUploader
                     onFilesSelected={handleFilesSelected}
                     disabled={false}
                   />
@@ -261,7 +261,7 @@ function App() {
 
             {/* Processing Page */}
             <Route path="/processing" element={
-              <ProcessingPage 
+              <ExtractionProcessor 
                 fileName={selectedFiles[0]?.name} 
                 onProgressUpdate={handleProgressComplete}
               />
@@ -269,7 +269,7 @@ function App() {
 
             {/* Results Page */}
             <Route path="/results" element={
-              <ResultsPage 
+              <OutputDisplay 
                 filename={outputFilename} 
                 onStartNew={handleStartNew}
                 onCompare={handleCompareOutput}
@@ -278,17 +278,17 @@ function App() {
 
             {/* History Page */}
             <Route path="/history" element={
-              <HistoryPage onViewFile={handleViewHistoryFile} />
+              <RecordsArchive onViewFile={handleViewHistoryFile} />
             } />
 
             {/* Compare XLSX Page (Dual mode - from header) */}
             <Route path="/compare" element={
-              <CompareXLSX mode="dual" />
+              <DataComparison mode="dual" />
             } />
 
             {/* Compare Output Page (Single mode - from results) */}
             <Route path="/compare-output" element={
-              <CompareXLSX 
+              <DataComparison 
                 mode="single" 
                 outputFile={outputFilename}
                 onBack={handleBackToResults}

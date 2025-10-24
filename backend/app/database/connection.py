@@ -8,8 +8,8 @@ from sqlalchemy.pool import StaticPool
 import logging
 from typing import Generator
 
-from app.config import settings
-from .models import Base
+from app.settings import settings
+from .schemas import Base
 
 logger = logging.getLogger(__name__)
 

@@ -8,8 +8,8 @@ import google.generativeai as genai
 import json
 import logging
 from typing import Dict, Any, Optional, List
-from app.config import settings
-from app.templates.prompt_template import EXTRACTION_PROMPT_TEMPLATE, VALIDATION_PROMPT
+from app.settings import settings
+from app.templates.extraction_prompt import EXTRACTION_PROMPT_TEMPLATE, VALIDATION_PROMPT
 
 logger = logging.getLogger(__name__)
 

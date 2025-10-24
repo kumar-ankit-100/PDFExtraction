@@ -1,6 +1,6 @@
 import React from 'react';
-import ExcelViewer from './ExcelViewer';
-import DownloadButton from './DownloadButton';
+import SpreadsheetViewer from './SpreadsheetViewer';
+import FileExporter from './FileExporter';
 
 const ResultsPage = ({ filename, onStartNew, onCompare }) => {
   // Check if filename is valid
@@ -124,11 +124,11 @@ const ResultsPage = ({ filename, onStartNew, onCompare }) => {
               <h3 className="text-xl font-bold text-slate-900 dark:text-white">Financial Data Preview</h3>
             </div>
             <div className="flex gap-2">
-              <DownloadButton jobId={filename} />
+              <FileExporter jobId={filename} />
             </div>
           </div>
         </div>
-        <ExcelViewer filename={filename} />
+        <SpreadsheetViewer filename={filename} />
       </div>
 
       {/* Action Buttons - Repositioned */}
