@@ -1,19 +1,21 @@
 """
-PDF text extraction service using pdfplumber.
-Handles PDF parsing and text extraction with error handling.
+PDF text extraction service using pypdf library.
+Extracts text content from PDF documents for further processing.
 """
 
-import pdfplumber
-import logging
+import pypdf
 from typing import Optional
 
-logger = logging.getLogger(__name__)
+from app.utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 
 class PDFExtractor:
-    """Extract text content from PDF files."""
+    """Extract text content from PDF files using pypdf."""
     
     def __init__(self):
+        """Initialize PDF extractor."""
         self.extracted_text = ""
     
     def extract_text_from_pdf(self, pdf_path: str) -> str:
@@ -21,55 +23,76 @@ class PDFExtractor:
         Extract all text content from a PDF file.
         
         Args:
-            pdf_path: Path to the PDF file
+            pdf_path: Path to PDF file
             
         Returns:
-            Extracted text as a string
-            
-        Raises:
-            Exception: If PDF extraction fails
+            Extracted text as a single string
         """
+        logger.info(f"Starting PDF text extraction | File: {pdf_path}")
+        
         try:
-            extracted_text = []
-            
-            with pdfplumber.open(pdf_path) as pdf:
-                logger.info(f"Processing PDF with {len(pdf.pages)} pages")
+            with open(pdf_path, 'rb') as file:
+                pdf = pypdf.PdfReader(file)
+                pages_count = len(pdf.pages)
                 
-                for page_num, page in enumerate(pdf.pages, start=1):
-                    logger.debug(f"Extracting text from page {page_num}")
-                    
-                    # Extract text from the page
+                logger.info(f"PDF loaded successfully | Pages: {pages_count}")
+                
+                for page_num, page in enumerate(pdf.pages, 1):
+                    logger.debug(f"Extracting text from page {page_num}/{pages_count}")
                     text = page.extract_text()
                     
                     if text:
-                        extracted_text.append(f"\n--- Page {page_num} ---\n")
-                        extracted_text.append(text)
-                    
-                    # Also extract tables if present
-                    tables = page.extract_tables()
-                    if tables:
-                        for table_num, table in enumerate(tables, start=1):
-                            extracted_text.append(f"\n[Table {table_num} on Page {page_num}]\n")
-                            # Convert table to text representation
-                            for row in table:
-                                if row:
-                                    row_text = " | ".join([str(cell) if cell else "" for cell in row])
-                                    extracted_text.append(row_text + "\n")
+                        self.extracted_text += text + "\n\n"
+                        logger.debug(f"Page {page_num} extracted | Characters: {len(text):,}")
+                    else:
+                        logger.warning(f"Page {page_num} contained no extractable text")
             
-            self.extracted_text = "".join(extracted_text)
+            # Final cleanup
+            self.extracted_text = self._clean_text(self.extracted_text)
             
-            if not self.extracted_text.strip():
-                raise Exception("No text could be extracted from the PDF")
+            logger.info(f"Text extraction completed successfully | Total characters: {len(self.extracted_text):,}")
+            logger.debug(f"Preview (first 200 chars): {self.extracted_text[:200]}...")
             
-            logger.info(f"Successfully extracted {len(self.extracted_text)} characters from PDF")
             return self.extracted_text
             
         except Exception as e:
-            logger.error(f"Error extracting text from PDF: {str(e)}")
-            raise Exception(f"Failed to extract text from PDF: {str(e)}")
+            logger.error(f"PDF text extraction failed: {str(e)}", exc_info=True)
+            raise
+    
+    def _clean_text(self, text: str) -> str:
+        """
+        Clean extracted text by removing extra whitespace.
+        
+        Args:
+            text: Raw extracted text
+            
+        Returns:
+            Cleaned text
+        """
+        # Remove multiple consecutive newlines
+        text = '\n'.join(line for line in text.split('\n') if line.strip())
+        
+        # Remove excessive whitespace
+        text = ' '.join(text.split())
+        
+        return text.strip()
     
     def get_text_preview(self, max_chars: int = 500) -> str:
-        """Get a preview of the extracted text."""
+        """
+        Get a preview of the extracted text.
+        
+        Args:
+            max_chars: Maximum characters to return
+            
+        Returns:
+            Preview of extracted text
+        """
         if not self.extracted_text:
+            logger.warning("No text available for preview")
             return ""
-        return self.extracted_text[:max_chars] + ("..." if len(self.extracted_text) > max_chars else "")
+        
+        preview = self.extracted_text[:max_chars]
+        if len(self.extracted_text) > max_chars:
+            preview += "..."
+        
+        return preview

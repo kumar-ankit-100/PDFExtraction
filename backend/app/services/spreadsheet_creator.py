@@ -7,16 +7,19 @@ from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
 from typing import Dict, Any, List
-import logging
 from datetime import datetime
 
-logger = logging.getLogger(__name__)
+from app.utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 
 class ExcelGenerator:
     """Generate formatted Excel files from extracted data."""
     
     def __init__(self):
+        """Initialize Excel generator with styling configuration."""
+        logger.debug("Initializing ExcelGenerator with predefined styles")
         self.wb = None
         
         # Style definitions
@@ -32,6 +35,7 @@ class ExcelGenerator:
         )
         self.center_alignment = Alignment(horizontal="center", vertical="center")
         self.left_alignment = Alignment(horizontal="left", vertical="center")
+        logger.debug("Excel styles configured successfully")
     
     def generate_excel(self, data: Dict[str, Any], output_path: str) -> str:
         """
@@ -44,37 +48,63 @@ class ExcelGenerator:
         Returns:
             Path to the generated Excel file
         """
+        logger.info("=" * 80)
+        logger.info("Starting Excel file generation")
+        logger.info(f"Output path: {output_path}")
+        
         try:
             self.wb = Workbook()
             # Remove default sheet
             if "Sheet" in self.wb.sheetnames:
                 del self.wb["Sheet"]
             
-            logger.info("Generating Excel sheets...")
+            logger.info("Creating Excel sheets from extracted data...")
             
-            # Generate all sheets
+            # Generate all sheets with individual logging
+            logger.debug("Creating Portfolio Summary sheet...")
             self._create_portfolio_summary_sheet(data.get("portfolio_summary", {}))
+            
+            logger.debug("Creating Schedule of Investments sheet...")
             self._create_schedule_of_investments_sheet(data.get("schedule_of_investments", []))
+            
+            logger.debug("Creating Statement of Operations sheet...")
             self._create_statement_of_operations_sheet(data.get("statement_of_operations", []))
+            
+            logger.debug("Creating Statement of Cashflows sheet...")
             self._create_statement_of_cashflows_sheet(data.get("statement_of_cashflows", {}))
+            
+            logger.debug("Creating PCAP Statement sheet...")
             self._create_pcap_statement_sheet(data.get("pcap_statement", {}))
+            
+            logger.debug("Creating Portfolio Company Profile sheet...")
             self._create_portfolio_company_profile_sheet(data.get("portfolio_company_profile", []))
+            
+            logger.debug("Creating Portfolio Company Financials sheet...")
             self._create_portfolio_company_financials_sheet(data.get("portfolio_company_financials", []))
+            
+            logger.debug("Creating Footnotes sheet...")
             self._create_footnotes_sheet(data.get("footnotes", []))
+            
+            logger.debug("Creating Reference Values sheet...")
             self._create_reference_values_sheet(data.get("reference_values", {}))
             
             # Save workbook
+            logger.info(f"Saving Excel file with {len(self.wb.sheetnames)} sheets...")
             self.wb.save(output_path)
-            logger.info(f"Excel file saved to: {output_path}")
+            
+            logger.info(f"Excel file generated successfully | Sheets: {len(self.wb.sheetnames)} | Path: {output_path}")
+            logger.debug(f"Sheet names: {', '.join(self.wb.sheetnames)}")
+            logger.info("=" * 80)
             
             return output_path
             
         except Exception as e:
-            logger.error(f"Error generating Excel file: {str(e)}")
+            logger.error(f"Excel generation failed: {str(e)}", exc_info=True)
             raise Exception(f"Failed to generate Excel file: {str(e)}")
     
     def _create_portfolio_summary_sheet(self, data: Dict[str, Any]):
         """Create Sheet 1: Portfolio Summary."""
+        logger.debug("Creating Portfolio Summary sheet...")
         ws = self.wb.create_sheet("Portfolio Summary")
         
         # Headers
@@ -126,6 +156,7 @@ class ExcelGenerator:
             ("Other", "other_industry_percent"),
         ]
         
+        filled_fields = 0
         for label, key in all_fields:
             ws[f'A{row}'] = label
             if key is None:
@@ -133,14 +164,19 @@ class ExcelGenerator:
                 ws[f'A{row}'].font = self.section_font
                 ws[f'B{row}'] = ""
             else:
-                ws[f'B{row}'] = data.get(key, "")
+                value = data.get(key, "")
+                ws[f'B{row}'] = value
+                if value:
+                    filled_fields += 1
             row += 1
         
         # Auto-size columns
         self._auto_size_columns(ws)
+        logger.debug(f"Portfolio Summary sheet created | Fields: {len(all_fields)} | Filled: {filled_fields}")
     
     def _create_schedule_of_investments_sheet(self, data: List[Dict[str, Any]]):
         """Create Sheet 2: Schedule of Investments."""
+        logger.debug("Creating Schedule of Investments sheet...")
         ws = self.wb.create_sheet("Schedule of Investments")
         
         headers = [
@@ -189,6 +225,7 @@ class ExcelGenerator:
             ws.cell(row=row_idx, column=23, value=investment.get("since_inception_irr", ""))
         
         self._auto_size_columns(ws)
+        logger.debug(f"Schedule of Investments sheet created | Investments: {len(data)} | Columns: {len(headers)}")
     
     def _create_statement_of_operations_sheet(self, data: List[Dict[str, Any]]):
         """Create Sheet 3: Statement of Operations."""

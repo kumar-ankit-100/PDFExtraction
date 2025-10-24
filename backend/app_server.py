@@ -1,5 +1,6 @@
 """
 Main FastAPI application for PDF data extraction.
+Provides RESTful API endpoints for financial document processing.
 """
 
 from fastapi import FastAPI, File, UploadFile, HTTPException, Form, Depends, Query
@@ -8,7 +9,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from typing import Optional
 import os
-import logging
 from datetime import datetime
 import shutil
 from pathlib import Path
@@ -27,13 +27,10 @@ from app.database.operations import (
     JobStatusService
 )
 from app.database.schemas import JobStatusEnum, LogLevelEnum
+from app.utils.logger import get_logger
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
+# Initialize logger
+logger = get_logger(__name__)
 
 # Create FastAPI app
 app = FastAPI(
@@ -58,45 +55,56 @@ Path(settings.OUTPUT_DIR).mkdir(exist_ok=True)
 
 @app.on_event("startup")
 async def startup_event():
-    """Initialize database on startup."""
-    logger.info("Starting application...")
+    """Initialize application on startup."""
+    logger.info("="*80)
+    logger.info("FINANCIAL DOCUMENT EXTRACTION SERVICE - STARTING")
+    logger.info("="*80)
+    logger.info(f"Environment: {settings.ENVIRONMENT}")
+    logger.info(f"Debug Mode: {settings.DEBUG}")
+    logger.info(f"CORS Origins: {settings.CORS_ORIGINS}")
+    
+    # Initialize database
     init_db()
-    logger.info("Application started successfully")
+    logger.info("Application initialized successfully")
+    logger.info("="*80)
 
 
 @app.get("/")
-async def read_root():
-    """API root endpoint."""
+async def root():
+    """Root endpoint - Health check."""
+    logger.debug("Health check requested")
     return {
-        "message": "Fund Report PDF Extractor API",
-        "version": "1.0.0",
-        "endpoints": {
-            "health": "/health",
-            "extract": "/api/extract",
-            "download": "/api/download/{filename}",
-            "preview": "/api/preview/{filename}",
-            "templates": "/api/templates"
-        }
+        "message": "Financial Document Extraction API",
+        "version": "2.0.0",
+        "status": "operational",
+        "timestamp": datetime.now().isoformat()
     }
 
 
 @app.get("/health")
 async def health_check(db: Session = Depends(get_db)):
-    """Health check endpoint."""
+    """
+    Health check endpoint with database connectivity verification.
+    
+    Returns:
+        dict: Health status and system information
+    """
+    logger.debug("Performing health check with database verification")
+    
     try:
         # Test database connection
         db.execute("SELECT 1")
         db_status = "connected"
+        logger.debug("Database connection verified successfully")
     except Exception as e:
-        logger.error(f"Database connection error: {str(e)}")
         db_status = "disconnected"
-    
+        logger.error(f"Database health check failed: {str(e)}", exc_info=True)
+        
     return {
-        "status": "healthy",
+        "status": "healthy" if db_status == "connected" else "degraded",
+        "database": db_status,
         "timestamp": datetime.now().isoformat(),
-        "gemini_api_configured": bool(settings.GEMINI_API_KEY),
-        "database_status": db_status,
-        "database_url_configured": bool(settings.DATABASE_URL)
+        "version": "2.0.0"
     }
 
 
@@ -107,7 +115,7 @@ async def extract_data(
     db: Session = Depends(get_db)
 ):
     """
-    Extract data from uploaded PDF file.
+    Extract structured data from uploaded PDF financial document.
     
     Args:
         file: Uploaded PDF file
@@ -115,19 +123,24 @@ async def extract_data(
         db: Database session
         
     Returns:
-        Job ID and extraction results
+        Job ID and extraction results with metadata
     """
     start_time = time.time()
     job_id = str(uuid.uuid4())
     
-    logger.info(f"[{job_id}] Received extraction request for file: {file.filename}")
+    logger.info("="*100)
+    logger.info(f"NEW EXTRACTION REQUEST | Job ID: {job_id}")
+    logger.info(f"File: {file.filename} | Template: {template_id}")
+    logger.info("="*100)
     
     # Validate file
     if not file.filename.endswith('.pdf'):
+        logger.warning(f"[{job_id}] Invalid file type rejected: {file.filename}")
         raise HTTPException(status_code=400, detail="Only PDF files are allowed")
     
     # Check API key
     if not settings.GEMINI_API_KEY:
+        logger.critical("[{job_id}] Gemini API key not configured")
         raise HTTPException(
             status_code=500,
             detail="Gemini API key not configured. Please set GEMINI_API_KEY in .env file"
@@ -151,11 +164,16 @@ async def extract_data(
     
     try:
         # Save uploaded file first
-        logger.info(f"[{job_id}] Saving uploaded file to: {pdf_path}")
+        logger.info(f"[{job_id}] PHASE 1: File Upload - Saving to disk")
+        logger.debug(f"[{job_id}] Destination: {pdf_path} | Size: {file_size / 1024:.2f} KB")
+        
         with open(pdf_path, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
         
+        logger.info(f"[{job_id}] File saved successfully")
+        
         # Create uploaded file record in database
+        logger.debug(f"[{job_id}] Creating database record for uploaded file")
         db_file = UploadedFileService.create(
             db=db,
             filename=pdf_filename,
@@ -185,13 +203,14 @@ async def extract_data(
         )
         
         # Step 1: Extract text from PDF
-        logger.info(f"[{job_id}] Step 1: Extracting text from PDF...")
+        logger.info(f"[{job_id}] PHASE 2: Text Extraction - Processing PDF")
         step_start = time.time()
+        
         pdf_extractor = PDFExtractor()
         extracted_text = pdf_extractor.extract_text_from_pdf(pdf_path)
-        step_duration = int((time.time() - step_start) * 1000)
         
-        logger.info(f"[{job_id}] Extracted {len(extracted_text)} characters from PDF")
+        step_duration = int((time.time() - step_start) * 1000)
+        logger.info(f"[{job_id}] Text extraction completed | Characters: {len(extracted_text):,} | Duration: {step_duration}ms")
         ExtractionLogService.create(
             db, db_file.id, 
             f"Extracted {len(extracted_text)} characters from PDF",
@@ -205,13 +224,15 @@ async def extract_data(
         )
         
         # Step 2: Send to Gemini for data extraction
-        logger.info(f"[{job_id}] Step 2: Sending text to Gemini API for data extraction...")
+        logger.info(f"[{job_id}] PHASE 3: AI Processing - Extracting structured data with Gemini")
+        logger.debug(f"[{job_id}] Model: {settings.GEMINI_MODEL}")
         step_start = time.time()
+        
         gemini_extractor = GeminiExtractor()
         structured_data = gemini_extractor.extract_with_retry(extracted_text, max_retries=2)
-        step_duration = int((time.time() - step_start) * 1000)
         
-        logger.info(f"[{job_id}] Successfully extracted structured data from Gemini")
+        step_duration = int((time.time() - step_start) * 1000)
+        logger.info(f"[{job_id}] AI processing completed | Duration: {step_duration}ms")
         ExtractionLogService.create(
             db, db_file.id, 
             f"AI extraction completed using {settings.GEMINI_MODEL}",
@@ -225,13 +246,14 @@ async def extract_data(
         )
         
         # Step 3: Generate Excel file
-        logger.info(f"[{job_id}] Step 3: Generating Excel file...")
+        logger.info(f"[{job_id}] PHASE 4: Excel Generation - Creating spreadsheet")
         step_start = time.time()
+        
         excel_generator = ExcelGenerator()
         output_path = excel_generator.generate_excel(structured_data, excel_path)
-        step_duration = int((time.time() - step_start) * 1000)
         
-        logger.info(f"[{job_id}] Excel file generated: {output_path}")
+        step_duration = int((time.time() - step_start) * 1000)
+        logger.info(f"[{job_id}] Excel generation completed | File: {excel_filename} | Duration: {step_duration}ms")
         ExtractionLogService.create(
             db, db_file.id, 
             f"Excel file generated: {excel_filename}",
@@ -271,6 +293,11 @@ async def extract_data(
             LogLevelEnum.INFO, "completion"
         )
         
+        logger.info("="*100)
+        logger.info(f"EXTRACTION COMPLETED SUCCESSFULLY | Job ID: {job_id}")
+        logger.info(f"Total Time: {total_processing_time:.2f}s | Sheets: {total_sheets} | Characters: {len(extracted_text):,}")
+        logger.info("="*100)
+        
         return {
             "success": True,
             "message": "Data extracted successfully",
@@ -284,7 +311,10 @@ async def extract_data(
         }
         
     except Exception as e:
-        logger.error(f"[{job_id}] Error during extraction: {str(e)}", exc_info=True)
+        logger.error("="*100)
+        logger.error(f"EXTRACTION FAILED | Job ID: {job_id}")
+        logger.error(f"Error: {str(e)}")
+        logger.error("="*100, exc_info=True)
         
         # Log error to database if file record exists
         if db_file:

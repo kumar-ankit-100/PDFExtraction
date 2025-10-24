@@ -6,12 +6,13 @@ Uses progressive chunking to extract complete data from large PDFs.
 
 import google.generativeai as genai
 import json
-import logging
 from typing import Dict, Any, Optional, List
+
 from app.settings import settings
+from app.utils.logger import get_logger
 from app.templates.extraction_prompt import EXTRACTION_PROMPT_TEMPLATE, VALIDATION_PROMPT
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class GeminiExtractor:
@@ -26,11 +27,13 @@ class GeminiExtractor:
         """
         self.api_key = api_key or settings.GEMINI_API_KEY
         if not self.api_key:
+            logger.critical("Gemini API key is required but not provided")
             raise ValueError("Gemini API key is required")
         
         genai.configure(api_key=self.api_key)
         self.model = genai.GenerativeModel(settings.GEMINI_MODEL)
-        logger.info(f"Initialized Gemini model: {settings.GEMINI_MODEL}")
+        
+        logger.info(f"Gemini API initialized successfully | Model: {settings.GEMINI_MODEL}")
     
     def extract_data(self, pdf_text: str, max_retries: int = 2) -> Dict[str, Any]:
         """
@@ -48,18 +51,17 @@ class GeminiExtractor:
         Raises:
             Exception: If extraction fails
         """
-        # Use progressive chunking strategy for complete data extraction
-        # Split into 4 chunks (1/4 of total data each)
-        min_chunk_size = 10000  # Minimum chunk size to avoid too small chunks
-        chunk_size = max(min_chunk_size, len(pdf_text) // 4)  # 1/4 of total data
-        
-        if len(pdf_text) > min_chunk_size * 2:  # Only chunk if PDF is large enough
-            logger.info(f"PDF text size: {len(pdf_text)} chars")
-            logger.info(f"Using progressive chunking: 1/4 of total data per chunk (~{chunk_size} chars)")
-            return self._extract_data_progressive_chunks(pdf_text, chunk_size, max_retries)
+        # Determine extraction strategy
+        if len(pdf_text) > 30000:
+            # Use progressive chunking for large PDFs
+            chunk_size = len(pdf_text) // 4  # 1/4 of total
+            logger.info(f"Large PDF detected | Size: {len(pdf_text):,} characters")
+            logger.info(f"Strategy: Progressive chunking | Chunk size: ~{chunk_size:,} characters")
+            return self._extract_with_progressive_chunking(pdf_text)
         else:
-            logger.info(f"PDF text size ({len(pdf_text)} chars) - Using single extraction")
-            return self._extract_data_single(pdf_text, max_retries)
+            # Single extraction for smaller PDFs
+            logger.info(f"Small PDF detected | Size: {len(pdf_text):,} characters | Strategy: Single extraction")
+            return self._extract_single(pdf_text)
     
     def _extract_data_progressive_chunks(self, pdf_text: str, chunk_size: int, max_retries: int) -> Dict[str, Any]:
         """
