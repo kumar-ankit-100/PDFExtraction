@@ -3,6 +3,37 @@ import ExcelViewer from './ExcelViewer';
 import DownloadButton from './DownloadButton';
 
 const ResultsPage = ({ filename, onStartNew, onCompare }) => {
+  // Check if filename is valid
+  if (!filename || filename.trim() === '') {
+    return (
+      <div className="max-w-7xl mx-auto space-y-8 animate-fade-in">
+        <div className="min-h-screen flex items-center justify-center p-6">
+          <div className="bg-slate-800 dark:bg-slate-900 rounded-[2.5rem] shadow-2xl border-2 border-slate-700 dark:border-slate-600 p-16 text-center space-y-6 max-w-2xl">
+            <div className="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br from-slate-600 to-slate-700 rounded-[2rem]">
+              <svg className="w-14 h-14 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+              </svg>
+            </div>
+            <div>
+              <h3 className="text-3xl font-bold text-white mb-2">No Data Available</h3>
+              <p className="text-lg text-slate-300 mb-6">There is nothing to show. Please upload and extract a financial document first.</p>
+              <button 
+                onClick={onStartNew} 
+                className="group relative overflow-hidden px-8 py-4 bg-gradient-to-r from-teal-600 via-cyan-600 to-blue-600 text-white rounded-xl font-bold transition-all duration-300 hover:shadow-2xl hover:shadow-cyan-500/50 hover:scale-105 flex items-center gap-3 mx-auto"
+              >
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-600 via-cyan-600 to-teal-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                <svg className="relative z-10 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                </svg>
+                <span className="relative z-10">Start New Extraction</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-7xl mx-auto space-y-8 animate-fade-in">
       {/* Success Header */}
