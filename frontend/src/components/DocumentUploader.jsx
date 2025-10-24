@@ -2,7 +2,7 @@ import React, { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import toast from 'react-hot-toast';
 
-const FileUpload = ({ onFilesSelected, disabled }) => {
+const FileUpload = ({ onFilesSelected, disabled, isProcessing }) => {
   const [files, setFiles] = useState([]);
 
   const onDrop = useCallback((acceptedFiles, rejectedFiles) => {
@@ -73,11 +73,52 @@ const FileUpload = ({ onFilesSelected, disabled }) => {
 
   return (
     <div className="space-y-6">
+      {/* Loading Overlay */}
+      {isProcessing && (
+        <div className="fixed inset-0 bg-slate-900/95 backdrop-blur-sm z-50 flex items-center justify-center">
+          <div className="w-full max-w-2xl mx-4">
+            <div className="relative overflow-hidden bg-gradient-to-br from-blue-600 via-cyan-600 to-teal-600 rounded-3xl shadow-2xl p-10">
+              <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAxMCAwIEwgMCAwIDAgMTAiIGZpbGw9Im5vbmUiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS1vcGFjaXR5PSIwLjEiIHN0cm9rZS13aWR0aD0iMSIvPjwvcGF0dGVybj48L2RlZnM+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0idXJsKCNncmlkKSIvPjwvc3ZnPg==')] opacity-20"></div>
+              
+              <div className="relative z-10 space-y-8 text-center">
+                <div className="inline-flex items-center justify-center w-20 h-20 bg-white/20 backdrop-blur-sm rounded-2xl shadow-2xl">
+                  <svg className="w-12 h-12 text-white animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                </div>
+                <div className="space-y-4">
+                  <h2 className="text-4xl font-black text-white drop-shadow-lg">Processing Your Document</h2>
+                  <p className="text-xl text-white/90 font-medium">AI is extracting financial data from your PDF...</p>
+                </div>
+                
+                {/* Animated Progress Dots */}
+                <div className="flex justify-center gap-3 py-4">
+                  <div className="w-4 h-4 bg-white/80 rounded-full animate-bounce" style={{ animationDelay: '0s' }}></div>
+                  <div className="w-4 h-4 bg-white/80 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                  <div className="w-4 h-4 bg-white/80 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
+                </div>
+
+                <div className="flex items-start gap-4 p-5 bg-white/10 border-2 border-white/30 rounded-2xl backdrop-blur-sm">
+                  <div className="flex-shrink-0">
+                    <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <p className="text-base text-white leading-relaxed font-medium text-left">
+                    Please wait while our AI analyzes your document and extracts structured portfolio data. This may take a moment.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div
         {...getRootProps()}
         className={`
           relative overflow-hidden rounded-2xl border-2 border-dashed transition-all duration-300
-          ${disabled 
+          ${disabled || isProcessing
             ? 'opacity-50 cursor-not-allowed border-slate-600 bg-slate-800/50' 
             : isDragActive 
               ? 'border-cyan-400 bg-cyan-500/10 scale-[1.02] cursor-pointer' 

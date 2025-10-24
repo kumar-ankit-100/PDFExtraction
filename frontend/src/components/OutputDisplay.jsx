@@ -1,8 +1,25 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import SpreadsheetViewer from './SpreadsheetViewer';
 import FileExporter from './FileExporter';
 
 const ResultsPage = ({ filename, onStartNew, onCompare }) => {
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    // Simulate loading data - wait for viewer to be ready
+    if (filename && filename.trim() !== '') {
+      setIsLoading(true);
+      // Give time for the Excel viewer to load
+      const timer = setTimeout(() => {
+        setIsLoading(false);
+      }, 1500);
+      
+      return () => clearTimeout(timer);
+    } else {
+      setIsLoading(false);
+    }
+  }, [filename]);
+
   // Check if filename is valid
   if (!filename || filename.trim() === '') {
     return (
@@ -27,6 +44,85 @@ const ResultsPage = ({ filename, onStartNew, onCompare }) => {
                 </svg>
                 <span className="relative z-10">Start New Extraction</span>
               </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="max-w-7xl mx-auto space-y-8 animate-fade-in">
+        <div className="min-h-screen flex items-center justify-center p-6">
+          <div className="w-full max-w-2xl">
+            <div className="relative overflow-hidden bg-gradient-to-br from-blue-600 via-cyan-600 to-teal-600 rounded-3xl shadow-2xl p-10">
+              <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAxMCAwIEwgMCAwIDAgMTAiIGZpbGw9Im5vbmUiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS1vcGFjaXR5PSIwLjEiIHN0cm9rZS13aWR0aD0iMSIvPjwvcGF0dGVybj48L2RlZnM+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0idXJsKCNncmlkKSIvPjwvc3ZnPg==')] opacity-20"></div>
+              
+              <div className="relative z-10 space-y-8 text-center">
+                <div className="inline-flex items-center justify-center w-24 h-24 bg-white/20 backdrop-blur-sm rounded-2xl shadow-2xl">
+                  <svg className="w-16 h-16 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
+                  </svg>
+                </div>
+                
+                <div className="space-y-4">
+                  <h2 className="text-4xl font-black text-white drop-shadow-lg">Loading Results</h2>
+                  <p className="text-xl text-white/90 font-medium">Preparing your extracted financial data...</p>
+                </div>
+
+                {/* Animated Spinner */}
+                <div className="flex justify-center py-6">
+                  <div className="relative w-32 h-32">
+                    <svg className="w-full h-full transform -rotate-90 animate-spin" viewBox="0 0 100 100">
+                      <defs>
+                        <linearGradient id="loadingGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                          <stop offset="0%" stopColor="#ffffff" />
+                          <stop offset="100%" stopColor="#e0f2fe" />
+                        </linearGradient>
+                      </defs>
+                      <circle
+                        cx="50"
+                        cy="50"
+                        r="45"
+                        fill="none"
+                        stroke="rgba(255,255,255,0.2)"
+                        strokeWidth="8"
+                      />
+                      <circle
+                        cx="50"
+                        cy="50"
+                        r="45"
+                        fill="none"
+                        stroke="url(#loadingGradient)"
+                        strokeWidth="8"
+                        strokeLinecap="round"
+                        strokeDasharray="70, 282.7"
+                        className="drop-shadow-lg"
+                      />
+                    </svg>
+                  </div>
+                </div>
+
+                {/* Animated Progress Dots */}
+                <div className="flex justify-center gap-3 py-2">
+                  <div className="w-3 h-3 bg-white/80 rounded-full animate-bounce" style={{ animationDelay: '0s' }}></div>
+                  <div className="w-3 h-3 bg-white/80 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                  <div className="w-3 h-3 bg-white/80 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
+                </div>
+
+                <div className="flex items-start gap-4 p-5 bg-white/10 border-2 border-white/30 rounded-2xl backdrop-blur-sm">
+                  <div className="flex-shrink-0">
+                    <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <p className="text-base text-white leading-relaxed font-medium text-left">
+                    Loading your Excel spreadsheet with all extracted financial data and portfolio information...
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
         </div>

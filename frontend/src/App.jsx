@@ -21,6 +21,7 @@ function App() {
   const [error, setError] = useState(null);
   const [processingComplete, setProcessingComplete] = useState(false);
   const [sidebarWidth, setSidebarWidth] = useState(280);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   // Determine current page from URL
   const getCurrentPage = () => {
@@ -62,8 +63,8 @@ function App() {
       return;
     }
 
+    setIsProcessing(true);
     toast.loading('Starting extraction...', { id: 'extraction' });
-    navigate('/processing');
     setError(null);
     setProcessingComplete(false);
 
@@ -74,8 +75,12 @@ function App() {
       if (response.success) {
         // Store the output filename
         setOutputFilename(response.output_file);
-        toast.success('File uploaded successfully!', { id: 'extraction' });
-        // Results will be shown after progress reaches 100%
+        toast.success('Extraction completed successfully! 🎉', { id: 'extraction' });
+        setIsProcessing(false);
+        // Navigate to results page after successful extraction
+        setTimeout(() => {
+          navigate('/results');
+        }, 500);
       } else {
         throw new Error(response.message || 'Extraction failed');
       }
@@ -83,7 +88,7 @@ function App() {
       const errorMessage = err.response?.data?.detail || err.message || 'Upload failed. Please try again.';
       toast.error(errorMessage, { id: 'extraction' });
       setError(errorMessage);
-      navigate('/');
+      setIsProcessing(false);
     }
   };
 
@@ -93,6 +98,7 @@ function App() {
     setOutputFilename(null);
     setError(null);
     setProcessingComplete(false);
+    setIsProcessing(false);
     toast.success('Ready for new extraction');
   };
 
@@ -199,12 +205,13 @@ function App() {
                 <div className="bg-white dark:bg-slate-800 backdrop-blur-sm border-2 border-slate-200 dark:border-slate-700 rounded-3xl p-10 shadow-2xl shadow-slate-300/50 dark:shadow-slate-950/50 animate-scale-in">
                   <DocumentUploader
                     onFilesSelected={handleFilesSelected}
-                    disabled={false}
+                    disabled={isProcessing}
+                    isProcessing={isProcessing}
                   />
 
                   <button
                     onClick={handleStartExtraction}
-                    disabled={selectedFiles.length === 0}
+                    disabled={selectedFiles.length === 0 || isProcessing}
                     className="w-full mt-8 group relative overflow-hidden bg-gradient-to-r from-blue-600 via-cyan-600 to-teal-600 text-white font-bold text-lg px-12 py-6 rounded-2xl transition-all duration-300 hover:shadow-2xl hover:shadow-cyan-500/50 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:transform-none disabled:hover:shadow-none flex items-center justify-center gap-4"
                   >
                     <div className="absolute inset-0 bg-gradient-to-r from-teal-600 via-cyan-600 to-blue-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
