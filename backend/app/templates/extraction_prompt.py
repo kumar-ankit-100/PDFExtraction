@@ -13,89 +13,99 @@ CRITICAL RULES:
 5. For Portfolio Summary: Find all fund metrics, performance data, regional and industry breakdowns
 
 3. **STATEMENT OF CASHFLOWS - TABLE EXTRACTION:**
-   Find the "Statement of Cashflows" table in the PDF. The table structure is:
-   - ROWS: 26 line items (see list below)
-   - COLUMNS: Current Period, Prior Period, Year to Date
+   Find the "Statement of Cashflows" table in the PDF. Extract values for each line item across all three time periods (Current Period, Prior Period, Year to Date).
    
-   For EACH line item, find the row in the table and extract the value from each of the 3 columns:
-   - row_1_current = Find "Cash flows from operating activities" row, get Current Period column value
-   - row_1_prior = Find "Cash flows from operating activities" row, get Prior Period column value
-   - row_1_ytd = Find "Cash flows from operating activities" row, get Year to Date column value
-   - row_2_current = Find "Net increase/(decrease) in partners' capital" row, get Current Period value
-   - row_2_prior = Find "Net increase/(decrease) in partners' capital" row, get Prior Period value
-   - row_2_ytd = Find "Net increase/(decrease) in partners' capital" row, get Year to Date value
+   The statement has THREE main sections:
    
-   Continue for ALL 26 rows. The line items are:
-   1. Cash flows from operating activities
-   2. Net increase/(decrease) in partners' capital
-   3. Adjustments to reconcile net increase/(decrease)
-   4. Net realized (gain)/loss on investments
-   5. Net change in unrealized (gain)/loss on investments
-   6. Changes in operating assets and liabilities
-   7. (Increase)/decrease in due from affiliates
-   8. (Increase)/decrease in due from third party
-   9. (Increase)/decrease in due from investment
-   10. Purchase of investments
-   11. Proceeds from sale of investments
-   12. Net cash provided by/(used in) operating activities
-   13. Cash flows from financing activities
-   14. Capital contributions
-   15. Distributions
-   16. Increase/(decrease) in due to limited partners
-   17. Increase/(decrease) in due to affiliates
-   18. (Increase)/decrease in due from limited partners
-   19. Proceeds from loans
-   20. Repayment of loans
-   21. Net cash provided by/(used in) financing activities
-   22. Net increase/(decrease) in cash and cash equivalents
-   23. Cash and cash equivalents, beginning of period
-   24. Cash and cash equivalents, end of period
-   25. Supplemental disclosure of cash flow information
-   26. Cash paid for interest
+   A. OPERATING ACTIVITIES SECTION:
+   - "Cash flows from operating activities" (section header)
+   - "Net increase/(decrease) in partners' capital"
+   - "Adjustments to reconcile net increase/(decrease)"
+   - "Net realized (gain)/loss on investments"
+   - "Net change in unrealized (gain)/loss on investments"
+   - "Changes in operating assets and liabilities"
+   - "(Increase)/decrease in due from affiliates"
+   - "(Increase)/decrease in due from third party"
+   - "(Increase)/decrease in due from investment"
+   - "Purchase of investments"
+   - "Proceeds from sale of investments"
+   - "Net cash provided by/(used in) operating activities" (subtotal)
    
-   **KEY**: Look for similar wording in the PDF. The exact text may vary slightly.
-   Extract ACTUAL numbers - each period should have DIFFERENT values!
+   B. FINANCING ACTIVITIES SECTION:
+   - "Cash flows from financing activities" (section header)
+   - "Capital contributions"
+   - "Distributions"
+   - "Increase/(decrease) in due to limited partners"
+   - "Increase/(decrease) in due to affiliates"
+   - "(Increase)/decrease in due from limited partners"
+   - "Proceeds from loans"
+   - "Repayment of loans"
+   - "Net cash provided by/(used in) financing activities" (subtotal)
+   
+   C. CASH SUMMARY SECTION:
+   - "Net increase/(decrease) in cash and cash equivalents"
+   - "Cash and cash equivalents, beginning of period"
+   - "Cash and cash equivalents, end of period"
+   
+   D. SUPPLEMENTAL INFORMATION:
+   - "Supplemental disclosure of cash flow information"
+   - "Cash paid for interest"
+   
+   **EXTRACTION INSTRUCTIONS:**
+   - Look for similar wording in the PDF (exact text may vary slightly)
+   - Extract ACTUAL numbers from the table - each period should have DIFFERENT values
+   - For section headers without values, use null
+   - Negative numbers are often shown in parentheses: (1000) means -1000
+   - Each line item should have three values: current_period, prior_period, year_to_date
 
 4. **PCAP STATEMENT - TABLE EXTRACTION:**
    Find the "PCAP Statement" or "Partners' Capital Account" or "Statement of Changes in Partners' Capital" table.
-   Structure: 28 line items × 3 time periods
+   Extract values for each line item across all three time periods (Current Period, Prior Period, Year to Date).
    
-   For EACH line item, find the row and extract values from all 3 period columns:
-   - row_1_current = Find "Beginning NAV" row, get Current Period value
-   - row_1_prior = Find "Beginning NAV" row, get Prior Period value
-   - row_1_ytd = Find "Beginning NAV" row, get Year to Date value
+   The statement has FOUR main sections:
    
-   Continue for ALL 28 rows. The line items are:
-   1. Beginning NAV - Net of Incentive Allocation
-   2. Contributions - Cash & Non-Cash
-   3. Distributions - Cash & Non-Cash
-   4. Total Cash / Non-Cash Flows
-   5. (Management Fees - Gross of Offsets, Waivers & Rebates)
-   6. (Management Fee Rebate)
-   7. (Partnership Expenses - Total)
-   8. Total Offsets to Fees & Expenses
-   9. Fee Waiver
-   10. Interest Income
-   11. Dividend Income
-   12. (Interest Expense)
-   13. Other Income/(Expense)
-   14. Total Net Operating Income / (Expense)
-   15. (Placement Fees)
-   16. Realized Gain / (Loss)
-   17. Change in Unrealized Gain / (Loss)
-   18. Ending NAV - Net of Incentive Allocation
-   19. Incentive Allocation - Paid During the Period
-   20. Accrued Incentive Allocation - Periodic Change
-   21. Accrued Incentive Allocation - Ending Period Balance
-   22. Ending NAV - Gross of Accrued Incentive Allocation
-   23. Total Commitment
-   24. Beginning Unfunded Commitment
-   25. Plus Recallable Distributions
-   26. Less Expired/Released Commitments
-   27. +/- Other Unfunded Adjustment
-   28. Ending Unfunded Commitment
+   A. NAV MOVEMENTS SECTION:
+   - "Beginning NAV - Net of Incentive Allocation"
+   - "Contributions - Cash & Non-Cash"
+   - "Distributions - Cash & Non-Cash"
+   - "Total Cash / Non-Cash Flows"
    
-   **KEY**: Look for similar wording. Extract ACTUAL numbers - different for each period!
+   B. FEES AND EXPENSES SECTION:
+   - "(Management Fees - Gross of Offsets, Waivers & Rebates)"
+   - "(Management Fee Rebate)"
+   - "(Partnership Expenses - Total)"
+   - "Total Offsets to Fees & Expenses"
+   - "Fee Waiver"
+   
+   C. INCOME AND PERFORMANCE SECTION:
+   - "Interest Income"
+   - "Dividend Income"
+   - "(Interest Expense)"
+   - "Other Income/(Expense)"
+   - "Total Net Operating Income / (Expense)"
+   - "(Placement Fees)"
+   - "Realized Gain / (Loss)"
+   - "Change in Unrealized Gain / (Loss)"
+   
+   D. ENDING NAV AND COMMITMENTS SECTION:
+   - "Ending NAV - Net of Incentive Allocation"
+   - "Incentive Allocation - Paid During the Period"
+   - "Accrued Incentive Allocation - Periodic Change"
+   - "Accrued Incentive Allocation - Ending Period Balance"
+   - "Ending NAV - Gross of Accrued Incentive Allocation"
+   - "Total Commitment"
+   - "Beginning Unfunded Commitment"
+   - "Plus Recallable Distributions"
+   - "Less Expired/Released Commitments"
+   - "+/- Other Unfunded Adjustment"
+   - "Ending Unfunded Commitment"
+   
+   **EXTRACTION INSTRUCTIONS:**
+   - Look for similar wording in the PDF (exact text may vary slightly)
+   - Extract ACTUAL numbers from the table - each period should have DIFFERENT values
+   - Negative numbers are often in parentheses: (1000) means -1000
+   - Items in parentheses like "(Management Fees...)" are typically expenses (negative)
+   - Each line item should have three values: current_period, prior_period, year_to_date
 
 5. Numbers: Remove $ and commas (e.g., "$1,000,000" becomes 1000000)
 6. Percentages: Convert to decimals (e.g., "15.5%" becomes 15.5)
@@ -184,66 +194,79 @@ Return JSON with this EXACT structure (fill with ALL data from the document):
   ],
   
   "statement_of_cashflows": {{
-    "row_1_current": 0, "row_1_prior": 0, "row_1_ytd": 0,
-    "row_2_current": 0, "row_2_prior": 0, "row_2_ytd": 0,
-    "row_3_current": 0, "row_3_prior": 0, "row_3_ytd": 0,
-    "row_4_current": 0, "row_4_prior": 0, "row_4_ytd": 0,
-    "row_5_current": 0, "row_5_prior": 0, "row_5_ytd": 0,
-    "row_6_current": 0, "row_6_prior": 0, "row_6_ytd": 0,
-    "row_7_current": 0, "row_7_prior": 0, "row_7_ytd": 0,
-    "row_8_current": 0, "row_8_prior": 0, "row_8_ytd": 0,
-    "row_9_current": 0, "row_9_prior": 0, "row_9_ytd": 0,
-    "row_10_current": 0, "row_10_prior": 0, "row_10_ytd": 0,
-    "row_11_current": 0, "row_11_prior": 0, "row_11_ytd": 0,
-    "row_12_current": 0, "row_12_prior": 0, "row_12_ytd": 0,
-    "row_13_current": 0, "row_13_prior": 0, "row_13_ytd": 0,
-    "row_14_current": 0, "row_14_prior": 0, "row_14_ytd": 0,
-    "row_15_current": 0, "row_15_prior": 0, "row_15_ytd": 0,
-    "row_16_current": 0, "row_16_prior": 0, "row_16_ytd": 0,
-    "row_17_current": 0, "row_17_prior": 0, "row_17_ytd": 0,
-    "row_18_current": 0, "row_18_prior": 0, "row_18_ytd": 0,
-    "row_19_current": 0, "row_19_prior": 0, "row_19_ytd": 0,
-    "row_20_current": 0, "row_20_prior": 0, "row_20_ytd": 0,
-    "row_21_current": 0, "row_21_prior": 0, "row_21_ytd": 0,
-    "row_22_current": 0, "row_22_prior": 0, "row_22_ytd": 0,
-    "row_23_current": 0, "row_23_prior": 0, "row_23_ytd": 0,
-    "row_24_current": 0, "row_24_prior": 0, "row_24_ytd": 0,
-    "row_25_current": 0, "row_25_prior": 0, "row_25_ytd": 0,
-    "row_26_current": 0, "row_26_prior": 0, "row_26_ytd": 0
-  }},
-    "row_25_current": 0, "row_25_prior": 0, "row_25_ytd": 0,
-    "row_26_current": 0, "row_26_prior": 0, "row_26_ytd": 0
+    "operating_activities": {{
+      "section_header": null,
+      "net_increase_decrease_partners_capital": {{"current_period": 0, "prior_period": 0, "year_to_date": 0}},
+      "adjustments_to_reconcile": {{"current_period": 0, "prior_period": 0, "year_to_date": 0}},
+      "net_realized_gain_loss_investments": {{"current_period": 0, "prior_period": 0, "year_to_date": 0}},
+      "net_change_unrealized_gain_loss": {{"current_period": 0, "prior_period": 0, "year_to_date": 0}},
+      "changes_in_operating_assets_liabilities": {{"current_period": 0, "prior_period": 0, "year_to_date": 0}},
+      "increase_decrease_due_from_affiliates": {{"current_period": 0, "prior_period": 0, "year_to_date": 0}},
+      "increase_decrease_due_from_third_party": {{"current_period": 0, "prior_period": 0, "year_to_date": 0}},
+      "increase_decrease_due_from_investment": {{"current_period": 0, "prior_period": 0, "year_to_date": 0}},
+      "purchase_of_investments": {{"current_period": 0, "prior_period": 0, "year_to_date": 0}},
+      "proceeds_from_sale_of_investments": {{"current_period": 0, "prior_period": 0, "year_to_date": 0}},
+      "net_cash_provided_by_operating_activities": {{"current_period": 0, "prior_period": 0, "year_to_date": 0}}
+    }},
+    "financing_activities": {{
+      "section_header": null,
+      "capital_contributions": {{"current_period": 0, "prior_period": 0, "year_to_date": 0}},
+      "distributions": {{"current_period": 0, "prior_period": 0, "year_to_date": 0}},
+      "increase_decrease_due_to_limited_partners": {{"current_period": 0, "prior_period": 0, "year_to_date": 0}},
+      "increase_decrease_due_to_affiliates": {{"current_period": 0, "prior_period": 0, "year_to_date": 0}},
+      "increase_decrease_due_from_limited_partners": {{"current_period": 0, "prior_period": 0, "year_to_date": 0}},
+      "proceeds_from_loans": {{"current_period": 0, "prior_period": 0, "year_to_date": 0}},
+      "repayment_of_loans": {{"current_period": 0, "prior_period": 0, "year_to_date": 0}},
+      "net_cash_provided_by_financing_activities": {{"current_period": 0, "prior_period": 0, "year_to_date": 0}}
+    }},
+    "cash_summary": {{
+      "net_increase_decrease_cash": {{"current_period": 0, "prior_period": 0, "year_to_date": 0}},
+      "cash_beginning_of_period": {{"current_period": 0, "prior_period": 0, "year_to_date": 0}},
+      "cash_end_of_period": {{"current_period": 0, "prior_period": 0, "year_to_date": 0}}
+    }},
+    "supplemental_information": {{
+      "supplemental_disclosure_header": null,
+      "cash_paid_for_interest": {{"current_period": 0, "prior_period": 0, "year_to_date": 0}}
+    }}
   }},
   
   "pcap_statement": {{
-    "row_1_current": 0, "row_1_prior": 0, "row_1_ytd": 0,
-    "row_2_current": 0, "row_2_prior": 0, "row_2_ytd": 0,
-    "row_3_current": 0, "row_3_prior": 0, "row_3_ytd": 0,
-    "row_4_current": 0, "row_4_prior": 0, "row_4_ytd": 0,
-    "row_5_current": 0, "row_5_prior": 0, "row_5_ytd": 0,
-    "row_6_current": 0, "row_6_prior": 0, "row_6_ytd": 0,
-    "row_7_current": 0, "row_7_prior": 0, "row_7_ytd": 0,
-    "row_8_current": 0, "row_8_prior": 0, "row_8_ytd": 0,
-    "row_9_current": 0, "row_9_prior": 0, "row_9_ytd": 0,
-    "row_10_current": 0, "row_10_prior": 0, "row_10_ytd": 0,
-    "row_11_current": 0, "row_11_prior": 0, "row_11_ytd": 0,
-    "row_12_current": 0, "row_12_prior": 0, "row_12_ytd": 0,
-    "row_13_current": 0, "row_13_prior": 0, "row_13_ytd": 0,
-    "row_14_current": 0, "row_14_prior": 0, "row_14_ytd": 0,
-    "row_15_current": 0, "row_15_prior": 0, "row_15_ytd": 0,
-    "row_16_current": 0, "row_16_prior": 0, "row_16_ytd": 0,
-    "row_17_current": 0, "row_17_prior": 0, "row_17_ytd": 0,
-    "row_18_current": 0, "row_18_prior": 0, "row_18_ytd": 0,
-    "row_19_current": 0, "row_19_prior": 0, "row_19_ytd": 0,
-    "row_20_current": 0, "row_20_prior": 0, "row_20_ytd": 0,
-    "row_21_current": 0, "row_21_prior": 0, "row_21_ytd": 0,
-    "row_22_current": 0, "row_22_prior": 0, "row_22_ytd": 0,
-    "row_23_current": 0, "row_23_prior": 0, "row_23_ytd": 0,
-    "row_24_current": 0, "row_24_prior": 0, "row_24_ytd": 0,
-    "row_25_current": 0, "row_25_prior": 0, "row_25_ytd": 0,
-    "row_26_current": 0, "row_26_prior": 0, "row_26_ytd": 0,
-    "row_27_current": 0, "row_27_prior": 0, "row_27_ytd": 0,
-    "row_28_current": 0, "row_28_prior": 0, "row_28_ytd": 0
+    "nav_movements": {{
+      "beginning_nav_net_of_incentive": {{"current_period": 0, "prior_period": 0, "year_to_date": 0}},
+      "contributions_cash_non_cash": {{"current_period": 0, "prior_period": 0, "year_to_date": 0}},
+      "distributions_cash_non_cash": {{"current_period": 0, "prior_period": 0, "year_to_date": 0}},
+      "total_cash_non_cash_flows": {{"current_period": 0, "prior_period": 0, "year_to_date": 0}}
+    }},
+    "fees_and_expenses": {{
+      "management_fees_gross": {{"current_period": 0, "prior_period": 0, "year_to_date": 0}},
+      "management_fee_rebate": {{"current_period": 0, "prior_period": 0, "year_to_date": 0}},
+      "partnership_expenses_total": {{"current_period": 0, "prior_period": 0, "year_to_date": 0}},
+      "total_offsets_to_fees_expenses": {{"current_period": 0, "prior_period": 0, "year_to_date": 0}},
+      "fee_waiver": {{"current_period": 0, "prior_period": 0, "year_to_date": 0}}
+    }},
+    "income_and_performance": {{
+      "interest_income": {{"current_period": 0, "prior_period": 0, "year_to_date": 0}},
+      "dividend_income": {{"current_period": 0, "prior_period": 0, "year_to_date": 0}},
+      "interest_expense": {{"current_period": 0, "prior_period": 0, "year_to_date": 0}},
+      "other_income_expense": {{"current_period": 0, "prior_period": 0, "year_to_date": 0}},
+      "total_net_operating_income": {{"current_period": 0, "prior_period": 0, "year_to_date": 0}},
+      "placement_fees": {{"current_period": 0, "prior_period": 0, "year_to_date": 0}},
+      "realized_gain_loss": {{"current_period": 0, "prior_period": 0, "year_to_date": 0}},
+      "change_in_unrealized_gain_loss": {{"current_period": 0, "prior_period": 0, "year_to_date": 0}}
+    }},
+    "ending_nav_and_commitments": {{
+      "ending_nav_net_of_incentive": {{"current_period": 0, "prior_period": 0, "year_to_date": 0}},
+      "incentive_allocation_paid": {{"current_period": 0, "prior_period": 0, "year_to_date": 0}},
+      "accrued_incentive_allocation_change": {{"current_period": 0, "prior_period": 0, "year_to_date": 0}},
+      "accrued_incentive_allocation_balance": {{"current_period": 0, "prior_period": 0, "year_to_date": 0}},
+      "ending_nav_gross_of_incentive": {{"current_period": 0, "prior_period": 0, "year_to_date": 0}},
+      "total_commitment": {{"current_period": 0, "prior_period": 0, "year_to_date": 0}},
+      "beginning_unfunded_commitment": {{"current_period": 0, "prior_period": 0, "year_to_date": 0}},
+      "plus_recallable_distributions": {{"current_period": 0, "prior_period": 0, "year_to_date": 0}},
+      "less_expired_released_commitments": {{"current_period": 0, "prior_period": 0, "year_to_date": 0}},
+      "other_unfunded_adjustment": {{"current_period": 0, "prior_period": 0, "year_to_date": 0}},
+      "ending_unfunded_commitment": {{"current_period": 0, "prior_period": 0, "year_to_date": 0}}
+    }}
   }},
   
   "portfolio_company_profile": [
@@ -302,25 +325,35 @@ Return JSON with this EXACT structure (fill with ALL data from the document):
 }}
 
 CRITICAL REQUIREMENTS - YOUR JSON MUST INCLUDE ALL THESE SECTIONS:
-✓ portfolio_summary (with all 37 fields)
-✓ schedule_of_investments (array of companies)
-✓ statement_of_operations (array with period data)
-✓ statement_of_cashflows (object with row_1_current through row_26_ytd - 78 values total)
-✓ pcap_statement (object with row_1_current through row_28_ytd - 84 values total)
-✓ portfolio_company_profile (array of companies)
-✓ portfolio_company_financials (array of company financials)
-✓ footnotes (array of notes)
-✓ reference_values (object with arrays)
+✓ portfolio_summary (with all 37+ fields including fund info, metrics, and breakdowns)
+✓ schedule_of_investments (array of all portfolio companies with investment details)
+✓ statement_of_operations (array with period-based income/expense data)
+✓ statement_of_cashflows (nested object with 4 sections):
+  - operating_activities (12 fields, each with current_period, prior_period, year_to_date)
+  - financing_activities (9 fields, each with current_period, prior_period, year_to_date)
+  - cash_summary (3 fields, each with current_period, prior_period, year_to_date)
+  - supplemental_information (2 fields)
+✓ pcap_statement (nested object with 4 sections):
+  - nav_movements (4 fields, each with current_period, prior_period, year_to_date)
+  - fees_and_expenses (5 fields, each with current_period, prior_period, year_to_date)
+  - income_and_performance (8 fields, each with current_period, prior_period, year_to_date)
+  - ending_nav_and_commitments (11 fields, each with current_period, prior_period, year_to_date)
+✓ portfolio_company_profile (array of companies with detailed profiles)
+✓ portfolio_company_financials (array of company financial metrics)
+✓ footnotes (array of explanatory notes)
+✓ reference_values (object with arrays of unique values found in the document)
 
 RESPONSE FORMAT RULES:
 1. Your response MUST start with {{ and end with }}
 2. Do NOT include any text before or after the JSON
 3. Do NOT wrap the JSON in markdown code blocks (```json)
 4. Include ALL 9 sections listed above (even if some arrays are empty [])
-5. For statement_of_cashflows: MUST have all 78 keys (row_1_current/prior/ytd through row_26_current/prior/ytd)
-6. For pcap_statement: MUST have all 84 keys (row_1_current/prior/ytd through row_28_current/prior/ytd)
-7. If you cannot find data for a field, use null (not 0, not empty string)
-8. Extract ALL tables, ALL companies, ALL financial data
+5. For statement_of_cashflows: Use nested structure with descriptive field names
+6. For pcap_statement: Use nested structure with descriptive field names
+7. Each field in cashflows/pcap should have three values: current_period, prior_period, year_to_date
+8. If you cannot find data for a field, use null (not 0, not empty string)
+9. Extract ALL tables, ALL companies, ALL financial data from the document
+10. Maintain high accuracy - double-check numbers match the PDF exactly
 
 Now extract the data and return ONLY the complete JSON with ALL 9 sections:"""
 

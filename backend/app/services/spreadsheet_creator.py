@@ -275,36 +275,37 @@ class ExcelGenerator:
     
     def _create_statement_of_cashflows_sheet(self, data: Dict[str, Any]):
         """Create Sheet 4: Statement of Cashflows."""
+        logger.debug("Creating Statement of Cashflows sheet...")
         ws = self.wb.create_sheet("Statement of Cashflows")
         
-        # Define the line items in order (these will be COLUMN headers)
+        # Define the line items with their field mappings (section, field_name, display_label)
         line_items = [
-            "Cash flows from operating activities",
-            "Net increase/(decrease) in partners' capital",
-            "Adjustments to reconcile net increase/(decrease)",
-            "Net realized (gain)/loss on investments",
-            "Net change in unrealized (gain)/loss on investments",
-            "Changes in operating assets and liabilities",
-            "(Increase)/decrease in due from affiliates",
-            "(Increase)/decrease in due from third party",
-            "(Increase)/decrease in due from investment",
-            "Purchase of investments",
-            "Proceeds from sale of investments",
-            "Net cash provided by/(used in) operating activities",
-            "Cash flows from financing activities",
-            "Capital contributions",
-            "Distributions",
-            "Increase/(decrease) in due to limited partners",
-            "Increase/(decrease) in due to affiliates",
-            "(Increase)/decrease in due from limited partners",
-            "Proceeds from loans",
-            "Repayment of loans",
-            "Net cash provided by/(used in) financing activities",
-            "Net increase/(decrease) in cash and cash equivalents",
-            "Cash and cash equivalents, beginning of period",
-            "Cash and cash equivalents, end of period",
-            "Supplemental disclosure of cash flow information",
-            "Cash paid for interest"
+            ("operating_activities", "section_header", "Cash flows from operating activities"),
+            ("operating_activities", "net_increase_decrease_partners_capital", "Net increase/(decrease) in partners' capital"),
+            ("operating_activities", "adjustments_to_reconcile", "Adjustments to reconcile net increase/(decrease)"),
+            ("operating_activities", "net_realized_gain_loss_investments", "Net realized (gain)/loss on investments"),
+            ("operating_activities", "net_change_unrealized_gain_loss", "Net change in unrealized (gain)/loss on investments"),
+            ("operating_activities", "changes_in_operating_assets_liabilities", "Changes in operating assets and liabilities"),
+            ("operating_activities", "increase_decrease_due_from_affiliates", "(Increase)/decrease in due from affiliates"),
+            ("operating_activities", "increase_decrease_due_from_third_party", "(Increase)/decrease in due from third party"),
+            ("operating_activities", "increase_decrease_due_from_investment", "(Increase)/decrease in due from investment"),
+            ("operating_activities", "purchase_of_investments", "Purchase of investments"),
+            ("operating_activities", "proceeds_from_sale_of_investments", "Proceeds from sale of investments"),
+            ("operating_activities", "net_cash_provided_by_operating_activities", "Net cash provided by/(used in) operating activities"),
+            ("financing_activities", "section_header", "Cash flows from financing activities"),
+            ("financing_activities", "capital_contributions", "Capital contributions"),
+            ("financing_activities", "distributions", "Distributions"),
+            ("financing_activities", "increase_decrease_due_to_limited_partners", "Increase/(decrease) in due to limited partners"),
+            ("financing_activities", "increase_decrease_due_to_affiliates", "Increase/(decrease) in due to affiliates"),
+            ("financing_activities", "increase_decrease_due_from_limited_partners", "(Increase)/decrease in due from limited partners"),
+            ("financing_activities", "proceeds_from_loans", "Proceeds from loans"),
+            ("financing_activities", "repayment_of_loans", "Repayment of loans"),
+            ("financing_activities", "net_cash_provided_by_financing_activities", "Net cash provided by/(used in) financing activities"),
+            ("cash_summary", "net_increase_decrease_cash", "Net increase/(decrease) in cash and cash equivalents"),
+            ("cash_summary", "cash_beginning_of_period", "Cash and cash equivalents, beginning of period"),
+            ("cash_summary", "cash_end_of_period", "Cash and cash equivalents, end of period"),
+            ("supplemental_information", "supplemental_disclosure_header", "Supplemental disclosure of cash flow information"),
+            ("supplemental_information", "cash_paid_for_interest", "Cash paid for interest"),
         ]
         
         # Write column headers (Description header + all line items)
@@ -315,8 +316,8 @@ class ExcelGenerator:
         cell.alignment = self.center_alignment
         cell.border = self.border
         
-        for col_idx, item in enumerate(line_items, start=2):
-            cell = ws.cell(row=1, column=col_idx, value=item)
+        for col_idx, (_, _, label) in enumerate(line_items, start=2):
+            cell = ws.cell(row=1, column=col_idx, value=label)
             cell.font = self.header_font
             cell.fill = self.header_fill
             cell.alignment = self.center_alignment
@@ -328,15 +329,23 @@ class ExcelGenerator:
             ws.cell(row=row_idx, column=1, value=label)
         
         # Fill data (transposed - rows are periods, columns are line items)
-        for idx in range(1, len(line_items) + 1):
-            current = data.get(f"row_{idx}_current", "")
-            prior = data.get(f"row_{idx}_prior", "")
-            ytd = data.get(f"row_{idx}_ytd", "")
+        for col_idx, (section, field, _) in enumerate(line_items, start=2):
+            section_data = data.get(section, {})
+            field_data = section_data.get(field)
             
-            col = idx + 1  # Column 2 onwards for line items
-            ws.cell(row=2, column=col, value=current if current != 0 else "")  # Current Period
-            ws.cell(row=3, column=col, value=prior if prior != 0 else "")      # Prior Period
-            ws.cell(row=4, column=col, value=ytd if ytd != 0 else "")          # Year to Date
+            if field_data and isinstance(field_data, dict):
+                current = field_data.get("current_period", "")
+                prior = field_data.get("prior_period", "")
+                ytd = field_data.get("year_to_date", "")
+                
+                ws.cell(row=2, column=col_idx, value=current if current != 0 else "")  # Current Period
+                ws.cell(row=3, column=col_idx, value=prior if prior != 0 else "")      # Prior Period
+                ws.cell(row=4, column=col_idx, value=ytd if ytd != 0 else "")          # Year to Date
+            else:
+                # Section headers or null values
+                ws.cell(row=2, column=col_idx, value="")
+                ws.cell(row=3, column=col_idx, value="")
+                ws.cell(row=4, column=col_idx, value="")
         
         # Freeze panes and format
         ws.row_dimensions[1].height = 20
@@ -344,41 +353,43 @@ class ExcelGenerator:
         ws.column_dimensions['A'].width = 20
         
         self._auto_size_columns(ws)
+        logger.debug(f"Statement of Cashflows sheet created | Line items: {len(line_items)}")
     
     def _create_pcap_statement_sheet(self, data: Dict[str, Any]):
         """Create Sheet 5: PCAP Statement."""
+        logger.debug("Creating PCAP Statement sheet...")
         ws = self.wb.create_sheet("PCAP Statement")
         
-        # Define the PCAP line items in order (these will be COLUMN headers)
+        # Define the PCAP line items with their field mappings (section, field_name, display_label)
         line_items = [
-            "Beginning NAV - Net of Incentive Allocation",
-            "Contributions - Cash & Non-Cash",
-            "Distributions - Cash & Non-Cash",
-            "Total Cash / Non-Cash Flows",
-            "(Management Fees - Gross of Offsets, Waivers & Rebates)",
-            "(Management Fee Rebate)",
-            "(Partnership Expenses - Total)",
-            "Total Offsets to Fees & Expenses",
-            "Fee Waiver",
-            "Interest Income",
-            "Dividend Income",
-            "(Interest Expense)",
-            "Other Income/(Expense)",
-            "Total Net Operating Income / (Expense)",
-            "(Placement Fees)",
-            "Realized Gain / (Loss)",
-            "Change in Unrealized Gain / (Loss)",
-            "Ending NAV - Net of Incentive Allocation",
-            "Incentive Allocation - Paid During the Period",
-            "Accrued Incentive Allocation - Periodic Change",
-            "Accrued Incentive Allocation - Ending Period Balance",
-            "Ending NAV - Gross of Accrued Incentive Allocation",
-            "Total Commitment",
-            "Beginning Unfunded Commitment",
-            "Plus Recallable Distributions",
-            "Less Expired/Released Commitments",
-            "+/- Other Unfunded Adjustment",
-            "Ending Unfunded Commitment"
+            ("nav_movements", "beginning_nav_net_of_incentive", "Beginning NAV - Net of Incentive Allocation"),
+            ("nav_movements", "contributions_cash_non_cash", "Contributions - Cash & Non-Cash"),
+            ("nav_movements", "distributions_cash_non_cash", "Distributions - Cash & Non-Cash"),
+            ("nav_movements", "total_cash_non_cash_flows", "Total Cash / Non-Cash Flows"),
+            ("fees_and_expenses", "management_fees_gross", "(Management Fees - Gross of Offsets, Waivers & Rebates)"),
+            ("fees_and_expenses", "management_fee_rebate", "(Management Fee Rebate)"),
+            ("fees_and_expenses", "partnership_expenses_total", "(Partnership Expenses - Total)"),
+            ("fees_and_expenses", "total_offsets_to_fees_expenses", "Total Offsets to Fees & Expenses"),
+            ("fees_and_expenses", "fee_waiver", "Fee Waiver"),
+            ("income_and_performance", "interest_income", "Interest Income"),
+            ("income_and_performance", "dividend_income", "Dividend Income"),
+            ("income_and_performance", "interest_expense", "(Interest Expense)"),
+            ("income_and_performance", "other_income_expense", "Other Income/(Expense)"),
+            ("income_and_performance", "total_net_operating_income", "Total Net Operating Income / (Expense)"),
+            ("income_and_performance", "placement_fees", "(Placement Fees)"),
+            ("income_and_performance", "realized_gain_loss", "Realized Gain / (Loss)"),
+            ("income_and_performance", "change_in_unrealized_gain_loss", "Change in Unrealized Gain / (Loss)"),
+            ("ending_nav_and_commitments", "ending_nav_net_of_incentive", "Ending NAV - Net of Incentive Allocation"),
+            ("ending_nav_and_commitments", "incentive_allocation_paid", "Incentive Allocation - Paid During the Period"),
+            ("ending_nav_and_commitments", "accrued_incentive_allocation_change", "Accrued Incentive Allocation - Periodic Change"),
+            ("ending_nav_and_commitments", "accrued_incentive_allocation_balance", "Accrued Incentive Allocation - Ending Period Balance"),
+            ("ending_nav_and_commitments", "ending_nav_gross_of_incentive", "Ending NAV - Gross of Accrued Incentive Allocation"),
+            ("ending_nav_and_commitments", "total_commitment", "Total Commitment"),
+            ("ending_nav_and_commitments", "beginning_unfunded_commitment", "Beginning Unfunded Commitment"),
+            ("ending_nav_and_commitments", "plus_recallable_distributions", "Plus Recallable Distributions"),
+            ("ending_nav_and_commitments", "less_expired_released_commitments", "Less Expired/Released Commitments"),
+            ("ending_nav_and_commitments", "other_unfunded_adjustment", "+/- Other Unfunded Adjustment"),
+            ("ending_nav_and_commitments", "ending_unfunded_commitment", "Ending Unfunded Commitment"),
         ]
         
         # Write column headers (Description header + all line items)
@@ -389,8 +400,8 @@ class ExcelGenerator:
         cell.alignment = self.center_alignment
         cell.border = self.border
         
-        for col_idx, item in enumerate(line_items, start=2):
-            cell = ws.cell(row=1, column=col_idx, value=item)
+        for col_idx, (_, _, label) in enumerate(line_items, start=2):
+            cell = ws.cell(row=1, column=col_idx, value=label)
             cell.font = self.header_font
             cell.fill = self.header_fill
             cell.alignment = self.center_alignment
@@ -402,15 +413,23 @@ class ExcelGenerator:
             ws.cell(row=row_idx, column=1, value=label)
         
         # Fill data (transposed - rows are periods, columns are line items)
-        for idx in range(1, len(line_items) + 1):
-            current = data.get(f"row_{idx}_current", "")
-            prior = data.get(f"row_{idx}_prior", "")
-            ytd = data.get(f"row_{idx}_ytd", "")
+        for col_idx, (section, field, _) in enumerate(line_items, start=2):
+            section_data = data.get(section, {})
+            field_data = section_data.get(field)
             
-            col = idx + 1  # Column 2 onwards for line items
-            ws.cell(row=2, column=col, value=current if current != 0 else "")  # Current Period
-            ws.cell(row=3, column=col, value=prior if prior != 0 else "")      # Prior Period
-            ws.cell(row=4, column=col, value=ytd if ytd != 0 else "")          # Year to Date
+            if field_data and isinstance(field_data, dict):
+                current = field_data.get("current_period", "")
+                prior = field_data.get("prior_period", "")
+                ytd = field_data.get("year_to_date", "")
+                
+                ws.cell(row=2, column=col_idx, value=current if current != 0 else "")  # Current Period
+                ws.cell(row=3, column=col_idx, value=prior if prior != 0 else "")      # Prior Period
+                ws.cell(row=4, column=col_idx, value=ytd if ytd != 0 else "")          # Year to Date
+            else:
+                # Null values
+                ws.cell(row=2, column=col_idx, value="")
+                ws.cell(row=3, column=col_idx, value="")
+                ws.cell(row=4, column=col_idx, value="")
         
         # Freeze panes and format
         ws.row_dimensions[1].height = 20
@@ -418,6 +437,7 @@ class ExcelGenerator:
         ws.column_dimensions['A'].width = 20
         
         self._auto_size_columns(ws)
+        logger.debug(f"PCAP Statement sheet created | Line items: {len(line_items)}")
     
     def _create_portfolio_company_profile_sheet(self, data: List[Dict[str, Any]]):
         """Create Sheet 6: Portfolio Company Profile."""
